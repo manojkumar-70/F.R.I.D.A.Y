@@ -1,0 +1,109 @@
+/* F.R.I.D.A.Y. — Phase 2.1 Window Architecture Stylesheet */
+
+.root {
+    -fx-font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.window-root {
+    -fx-background-color: linear-gradient(to bottom, #0a1124 0%, #0d172e 50%, #080d1c 100%);
+    -fx-background-radius: 10px;
+    -fx-border-color: rgba(0, 229, 255, 0.35);
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 16, 0.2, 0, 4);
+}
+
+/* Title Bar */
+.title-bar {
+    -fx-background-color: linear-gradient(to bottom, #111e38 0%, #0c162b 100%);
+    -fx-background-radius: 9px 9px 0 0;
+    -fx-border-color: rgba(0, 229, 255, 0.18);
+    -fx-border-width: 0 0 1px 0;
+    -fx-cursor: default;
+}
+
+.title-bar-text {
+    -fx-text-fill: #00e5ff;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.title-bar-subtext {
+    -fx-text-fill: #5c7c99;
+    -fx-font-size: 10px;
+    -fx-font-weight: 600;
+}
+
+/* Window Controls */
+.window-control-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #88a2bd;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 3px 12px;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+}
+
+.control-btn-minimize:hover {
+    -fx-background-color: rgba(0, 229, 255, 0.2);
+    -fx-text-fill: #00e5ff;
+}
+
+.control-btn-close:hover {
+    -fx-background-color: #d90429;
+    -fx-text-fill: #ffffff;
+}
+
+/* Center Content & HUD Card */
+.center-content-pane {
+    -fx-background-color: transparent;
+}
+
+.status-card {
+    -fx-background-color: rgba(13, 25, 48, 0.78);
+    -fx-border-color: rgba(0, 229, 255, 0.25);
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 24px 32px;
+}
+
+.system-badge {
+    -fx-text-fill: #00e5ff;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.headline-label {
+    -fx-text-fill: #f0f6fc;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.sub-label {
+    -fx-text-fill: #8ba2be;
+    -fx-font-size: 13px;
+}
+
+.status-pulse-dot {
+    -fx-fill: #00e5ff;
+}
+
+.status-state-text {
+    -fx-text-fill: #48cae4;
+    -fx-font-size: 12px;
+}
+
+/* Status Footer */
+.status-footer {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(0, 229, 255, 0.12);
+    -fx-border-width: 1px 0 0 0;
+}
+
+.footer-text {
+    -fx-text-fill: #5c7c99;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
