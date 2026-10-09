@@ -1,6 +1,6 @@
 /* =============================================================================
    F.R.I.D.A.Y. — HUD Design System & Design Tokens
-   Phase 2.2.1: Design Tokens and CSS Foundation
+   Phase 2.2.2: Reusable Glass-Panel Styling & Foundation
    ============================================================================= */
 
 .root {
@@ -17,6 +17,7 @@
     -fx-surface-panel: rgba(13, 27, 42, 0.85);     /* Elevated HUD module surface */
     -fx-surface-overlay: rgba(10, 17, 36, 0.92);   /* Modal / backdrop overlay */
     -fx-surface-hover: rgba(0, 229, 255, 0.12);    /* Subtle interactive hover */
+    -fx-surface-interactive-hover: rgba(16, 32, 60, 0.88); /* Hover state for glass panels */
 
     /* -------------------------------------------------------------------------
        2. COLOR TOKENS: Accents & Brand
@@ -47,8 +48,8 @@
        ------------------------------------------------------------------------- */
     -fx-border-subtle: rgba(0, 229, 255, 0.15);     /* Very low contrast separator */
     -fx-border-medium: rgba(0, 229, 255, 0.25);     /* Standard card/panel border */
-    -fx-border-prominent: rgba(0, 229, 255, 0.35);  /* Outer window outline */
-    -fx-border-highlight: #00e5ff;                  /* Active / focused highlight */
+    -fx-border-prominent: rgba(0, 229, 255, 0.35);  /* Outer window outline / focused border */
+    -fx-border-highlight: #00e5ff;                  /* Active highlight */
 
     /* -------------------------------------------------------------------------
        6. TYPOGRAPHY & SIZING METRICS
@@ -121,6 +122,66 @@
 }
 
 /* =============================================================================
+   REUSABLE GLASS PANEL & GLASS CARD STYLES
+   ============================================================================= */
+.glass-panel {
+    -fx-background-color: -fx-surface-panel;
+    -fx-background-radius: 8px;
+    -fx-border-color: -fx-border-medium;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 12, 0.1, 0, 2);
+}
+
+.glass-panel:hover {
+    -fx-background-color: -fx-surface-interactive-hover;
+    -fx-border-color: -fx-border-prominent;
+    -fx-effect: dropshadow(gaussian, rgba(0, 229, 255, 0.22), 14, 0.12, 0, 0);
+}
+
+.glass-panel-subtle {
+    -fx-background-color: -fx-surface-card;
+    -fx-background-radius: 8px;
+    -fx-border-color: -fx-border-subtle;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+}
+
+.glass-card {
+    -fx-background-color: -fx-surface-card;
+    -fx-background-radius: 8px;
+    -fx-border-color: -fx-border-medium;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-padding: 16px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 229, 255, 0.08), 8, 0.05, 0, 0);
+}
+
+.glass-card:hover {
+    -fx-background-color: -fx-surface-interactive-hover;
+    -fx-border-color: -fx-border-prominent;
+    -fx-effect: dropshadow(gaussian, rgba(0, 229, 255, 0.22), 12, 0.1, 0, 0);
+}
+
+.glass-badge {
+    -fx-background-color: rgba(0, 229, 255, 0.12);
+    -fx-background-radius: 4px;
+    -fx-border-color: -fx-border-subtle;
+    -fx-border-radius: 4px;
+    -fx-border-width: 1px;
+    -fx-padding: 2px 8px;
+    -fx-text-fill: -fx-accent-primary;
+    -fx-font-size: -fx-font-size-xs;
+    -fx-font-weight: bold;
+}
+
+.glass-header {
+    -fx-border-color: -fx-border-subtle;
+    -fx-border-width: 0 0 1px 0;
+    -fx-padding: 0 0 8px 0;
+}
+
+/* =============================================================================
    CENTER CONTENT & HUD STATUS CARD
    ============================================================================= */
 .center-content-pane {
@@ -133,6 +194,7 @@
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
     -fx-padding: 24px 32px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 229, 255, 0.12), 14, 0.1, 0, 0);
 }
 
 .system-badge {

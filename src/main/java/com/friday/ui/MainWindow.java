@@ -24,7 +24,7 @@ public final class MainWindow extends BorderPane {
         TitleBar titleBar = new TitleBar(stage);
         setTop(titleBar);
 
-        // Center: Primary Content Area (HUD foundation)
+        // Center: Primary Content Area (Glass HUD foundation)
         setCenter(createCenterContent());
 
         // Bottom: Status Footer
@@ -34,21 +34,21 @@ public final class MainWindow extends BorderPane {
     private StackPane createCenterContent() {
         StackPane centerPane = new StackPane();
         centerPane.getStyleClass().add("center-content-pane");
-        centerPane.setPadding(new Insets(20));
+        centerPane.setPadding(new Insets(24));
 
-        VBox statusCard = new VBox(14);
-        statusCard.getStyleClass().add("status-card");
-        statusCard.setAlignment(Pos.CENTER);
-        statusCard.setMaxWidth(560);
-        statusCard.setMaxHeight(260);
+        VBox glassCard = new VBox(14);
+        glassCard.getStyleClass().addAll("glass-panel", "glass-card", "status-card");
+        glassCard.setAlignment(Pos.CENTER);
+        glassCard.setMaxWidth(580);
+        glassCard.setMaxHeight(270);
 
-        Label systemBadge = new Label("F.R.I.D.A.Y. CORE ARCHITECTURE");
-        systemBadge.getStyleClass().add("system-badge");
+        Label systemBadge = new Label("F.R.I.D.A.Y. HUD ARCHITECTURE");
+        systemBadge.getStyleClass().addAll("glass-badge", "system-badge");
 
         Label headlineLabel = new Label("F.R.I.D.A.Y. System Online");
         headlineLabel.getStyleClass().add("headline-label");
 
-        Label subLabel = new Label("Phase 2.1 — Frameless Desktop Window Foundation");
+        Label subLabel = new Label("Phase 2.2 — Translucent Glass Panel Foundation");
         subLabel.getStyleClass().add("sub-label");
 
         HBox statusRow = new HBox(8);
@@ -57,13 +57,13 @@ public final class MainWindow extends BorderPane {
         Circle pulseDot = new Circle(4);
         pulseDot.getStyleClass().add("status-pulse-dot");
 
-        Label statusState = new Label("Window Architecture Active & Scalable");
+        Label statusState = new Label("Glass Styling & Design Tokens Active");
         statusState.getStyleClass().add("status-state-text");
 
         statusRow.getChildren().addAll(pulseDot, statusState);
 
-        statusCard.getChildren().addAll(systemBadge, headlineLabel, subLabel, statusRow);
-        centerPane.getChildren().add(statusCard);
+        glassCard.getChildren().addAll(systemBadge, headlineLabel, subLabel, statusRow);
+        centerPane.getChildren().add(glassCard);
 
         return centerPane;
     }
@@ -80,11 +80,10 @@ public final class MainWindow extends BorderPane {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Label rightStatus = new Label("PHASE 2.1 — READY");
+        Label rightStatus = new Label("PHASE 2.2 — GLASS STYLING READY");
         rightStatus.getStyleClass().add("footer-text");
 
         footer.getChildren().addAll(leftStatus, spacer, rightStatus);
         return footer;
     }
 }
-
