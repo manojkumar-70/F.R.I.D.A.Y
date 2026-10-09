@@ -1,44 +1,109 @@
-/* F.R.I.D.A.Y. — Phase 2.1 Window Architecture Stylesheet */
+/* =============================================================================
+   F.R.I.D.A.Y. — HUD Design System & Design Tokens
+   Phase 2.2.1: Design Tokens and CSS Foundation
+   ============================================================================= */
 
 .root {
+    /* -------------------------------------------------------------------------
+       1. COLOR TOKENS: Backgrounds & Surfaces
+       ------------------------------------------------------------------------- */
+    -fx-bg-primary: #0a1124;              /* Deep Navy (Primary Window Base) */
+    -fx-bg-secondary: #0d172e;            /* Dark Blue (Mid-depth gradient) */
+    -fx-bg-darkest: #060a14;              /* Deep Void Navy (Bottom gradient) */
+    -fx-bg-title-bar-top: #111e38;        /* Header elevated navy */
+    -fx-bg-title-bar-bot: #0c162b;        /* Header bottom shade */
+
+    -fx-surface-card: rgba(13, 25, 48, 0.78);      /* Semi-transparent panel surface */
+    -fx-surface-panel: rgba(13, 27, 42, 0.85);     /* Elevated HUD module surface */
+    -fx-surface-overlay: rgba(10, 17, 36, 0.92);   /* Modal / backdrop overlay */
+    -fx-surface-hover: rgba(0, 229, 255, 0.12);    /* Subtle interactive hover */
+
+    /* -------------------------------------------------------------------------
+       2. COLOR TOKENS: Accents & Brand
+       ------------------------------------------------------------------------- */
+    -fx-accent-primary: #00e5ff;          /* Bright Cyan */
+    -fx-accent-secondary: #0077b6;        /* Electric Blue */
+    -fx-accent-glow: #48cae4;             /* Soft Cyan Glow / Highlight */
+    -fx-accent-muted: #023e8a;            /* Deep Blue Muted Accent */
+
+    /* -------------------------------------------------------------------------
+       3. COLOR TOKENS: Typography & Foreground
+       ------------------------------------------------------------------------- */
+    -fx-text-primary: #f0f6fc;            /* High-contrast Near-White */
+    -fx-text-secondary: #8ba2be;          /* Muted Blue-Gray */
+    -fx-text-muted: #5c7c99;              /* Subdued labels / Meta text */
+    -fx-text-accent: #00e5ff;             /* Cyan highlighted text */
+
+    /* -------------------------------------------------------------------------
+       4. COLOR TOKENS: Status Indicators
+       ------------------------------------------------------------------------- */
+    -fx-status-success: #00f5d4;          /* Cyber Teal / Success */
+    -fx-status-warning: #ffd166;          /* Amber / Warning */
+    -fx-status-error: #d90429;            /* Crimson Red / Error */
+    -fx-status-info: #00b4d8;             /* Info Blue */
+
+    /* -------------------------------------------------------------------------
+       5. COLOR TOKENS: Borders & Outlines
+       ------------------------------------------------------------------------- */
+    -fx-border-subtle: rgba(0, 229, 255, 0.15);     /* Very low contrast separator */
+    -fx-border-medium: rgba(0, 229, 255, 0.25);     /* Standard card/panel border */
+    -fx-border-prominent: rgba(0, 229, 255, 0.35);  /* Outer window outline */
+    -fx-border-highlight: #00e5ff;                  /* Active / focused highlight */
+
+    /* -------------------------------------------------------------------------
+       6. TYPOGRAPHY & SIZING METRICS
+       ------------------------------------------------------------------------- */
     -fx-font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    -fx-font-size-xs: 10px;
+    -fx-font-size-sm: 11px;
+    -fx-font-size-md: 12px;
+    -fx-font-size-base: 13px;
+    -fx-font-size-lg: 16px;
+    -fx-font-size-xl: 22px;
 }
 
+/* =============================================================================
+   WINDOW CONTAINER
+   ============================================================================= */
 .window-root {
-    -fx-background-color: linear-gradient(to bottom, #0a1124 0%, #0d172e 50%, #080d1c 100%);
+    -fx-background-color: linear-gradient(to bottom, -fx-bg-primary 0%, -fx-bg-secondary 50%, -fx-bg-darkest 100%);
     -fx-background-radius: 10px;
-    -fx-border-color: rgba(0, 229, 255, 0.35);
+    -fx-border-color: -fx-border-prominent;
     -fx-border-radius: 10px;
     -fx-border-width: 1px;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 16, 0.2, 0, 4);
 }
 
-/* Title Bar */
+/* =============================================================================
+   CUSTOM TITLE BAR
+   ============================================================================= */
 .title-bar {
-    -fx-background-color: linear-gradient(to bottom, #111e38 0%, #0c162b 100%);
+    -fx-background-color: linear-gradient(to bottom, -fx-bg-title-bar-top 0%, -fx-bg-title-bar-bot 100%);
     -fx-background-radius: 9px 9px 0 0;
-    -fx-border-color: rgba(0, 229, 255, 0.18);
+    -fx-border-color: -fx-border-subtle;
     -fx-border-width: 0 0 1px 0;
     -fx-cursor: default;
 }
 
 .title-bar-text {
-    -fx-text-fill: #00e5ff;
-    -fx-font-size: 13px;
+    -fx-text-fill: -fx-accent-primary;
+    -fx-font-size: -fx-font-size-base;
     -fx-font-weight: bold;
 }
 
 .title-bar-subtext {
-    -fx-text-fill: #5c7c99;
-    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-size: -fx-font-size-xs;
     -fx-font-weight: 600;
 }
 
-/* Window Controls */
+/* =============================================================================
+   WINDOW CONTROL BUTTONS
+   ============================================================================= */
 .window-control-btn {
     -fx-background-color: transparent;
-    -fx-text-fill: #88a2bd;
-    -fx-font-size: 12px;
+    -fx-text-fill: -fx-text-secondary;
+    -fx-font-size: -fx-font-size-md;
     -fx-font-weight: bold;
     -fx-padding: 3px 12px;
     -fx-background-radius: 4px;
@@ -46,64 +111,67 @@
 }
 
 .control-btn-minimize:hover {
-    -fx-background-color: rgba(0, 229, 255, 0.2);
-    -fx-text-fill: #00e5ff;
+    -fx-background-color: -fx-surface-hover;
+    -fx-text-fill: -fx-accent-primary;
 }
 
 .control-btn-close:hover {
-    -fx-background-color: #d90429;
+    -fx-background-color: -fx-status-error;
     -fx-text-fill: #ffffff;
 }
 
-/* Center Content & HUD Card */
+/* =============================================================================
+   CENTER CONTENT & HUD STATUS CARD
+   ============================================================================= */
 .center-content-pane {
     -fx-background-color: transparent;
 }
 
 .status-card {
-    -fx-background-color: rgba(13, 25, 48, 0.78);
-    -fx-border-color: rgba(0, 229, 255, 0.25);
+    -fx-background-color: -fx-surface-card;
+    -fx-border-color: -fx-border-medium;
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
     -fx-padding: 24px 32px;
 }
 
 .system-badge {
-    -fx-text-fill: #00e5ff;
-    -fx-font-size: 11px;
+    -fx-text-fill: -fx-accent-primary;
+    -fx-font-size: -fx-font-size-sm;
     -fx-font-weight: bold;
 }
 
 .headline-label {
-    -fx-text-fill: #f0f6fc;
-    -fx-font-size: 22px;
+    -fx-text-fill: -fx-text-primary;
+    -fx-font-size: -fx-font-size-xl;
     -fx-font-weight: bold;
 }
 
 .sub-label {
-    -fx-text-fill: #8ba2be;
-    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-secondary;
+    -fx-font-size: -fx-font-size-base;
 }
 
 .status-pulse-dot {
-    -fx-fill: #00e5ff;
+    -fx-fill: -fx-accent-primary;
 }
 
 .status-state-text {
-    -fx-text-fill: #48cae4;
-    -fx-font-size: 12px;
+    -fx-text-fill: -fx-accent-glow;
+    -fx-font-size: -fx-font-size-md;
 }
 
-/* Status Footer */
+/* =============================================================================
+   STATUS FOOTER
+   ============================================================================= */
 .status-footer {
     -fx-background-color: transparent;
-    -fx-border-color: rgba(0, 229, 255, 0.12);
+    -fx-border-color: -fx-border-subtle;
     -fx-border-width: 1px 0 0 0;
 }
 
 .footer-text {
-    -fx-text-fill: #5c7c99;
-    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-size: -fx-font-size-xs;
     -fx-font-weight: bold;
 }
-
