@@ -13,10 +13,10 @@ import javafx.stage.StageStyle;
 
 public final class MainApp extends Application {
 
-    private static final double INITIAL_WIDTH = 900.0;
-    private static final double INITIAL_HEIGHT = 600.0;
-    private static final double MIN_WIDTH = 640.0;
-    private static final double MIN_HEIGHT = 420.0;
+    private static final double INITIAL_WIDTH = 1200.0;
+    private static final double INITIAL_HEIGHT = 780.0;
+    private static final double MIN_WIDTH = 960.0;
+    private static final double MIN_HEIGHT = 640.0;
 
     @Override
     public void start(Stage primaryStage) {

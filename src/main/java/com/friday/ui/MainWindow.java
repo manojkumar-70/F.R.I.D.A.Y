@@ -1,89 +1,112 @@
 package com.friday.ui;
 
+import com.friday.ui.actions.GreetingAndActionsPanel;
+import com.friday.ui.dock.BottomDock;
+import com.friday.ui.header.HeaderArea;
+import com.friday.ui.hologram.HologramAssistantView;
+import com.friday.ui.navigation.LeftNavigationBar;
+import com.friday.ui.panels.NotesPanel;
+import com.friday.ui.panels.SystemStatusPanel;
+import com.friday.ui.panels.TasksPanel;
+import com.friday.ui.panels.WaveformMicPanel;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 /**
- * Main window container layout providing the dark navy backdrop, title bar, content area, and status footer.
+ * Main HUD Window Layout bringing together the full-screen futuristic holographic assistant interface.
  */
 public final class MainWindow extends BorderPane {
 
     public MainWindow(Stage stage) {
         getStyleClass().add("window-root");
 
-        // Top: Custom Title Bar
+        // 1. Top Section: Title Bar (frameless controls) + HUD Header Area
+        VBox topContainer = new VBox();
         TitleBar titleBar = new TitleBar(stage);
-        setTop(titleBar);
+        HeaderArea headerArea = new HeaderArea();
+        topContainer.getChildren().addAll(titleBar, headerArea);
+        setTop(topContainer);
 
-        // Center: Primary Content Area (Glass HUD foundation)
-        setCenter(createCenterContent());
+        // 2. Left Section: Vertical Navigation Pills
+        LeftNavigationBar leftNav = new LeftNavigationBar();
+        setLeft(leftNav);
 
-        // Bottom: Status Footer
-        setBottom(createFooter());
+        // 3. Center HUD Workspace
+        StackPane centerStack = createCenterHudLayout();
+        setCenter(centerStack);
+
+        // 4. Bottom Section: System Status + Bottom Dock + Waveform Mic
+        HBox bottomBar = createBottomBar();
+        setBottom(bottomBar);
     }
 
-    private StackPane createCenterContent() {
-        StackPane centerPane = new StackPane();
-        centerPane.getStyleClass().add("center-content-pane");
-        centerPane.setPadding(new Insets(24));
+    private StackPane createCenterHudLayout() {
+        StackPane stack = new StackPane();
+        stack.getStyleClass().add("center-hud-workspace");
+        stack.setPadding(new Insets(6, 16, 6, 12));
 
-        VBox glassCard = new VBox(14);
-        glassCard.getStyleClass().addAll("glass-panel", "glass-card", "status-card");
-        glassCard.setAlignment(Pos.CENTER);
-        glassCard.setMaxWidth(580);
-        glassCard.setMaxHeight(270);
+        // A. Hologram Assistant Visualization (Layer 0 - Center Canvas)
+        HologramAssistantView hologramView = new HologramAssistantView();
+        StackPane.setAlignment(hologramView, Pos.CENTER);
 
-        Label systemBadge = new Label("F.R.I.D.A.Y. HUD ARCHITECTURE");
-        systemBadge.getStyleClass().addAll("glass-badge", "system-badge");
+        // B. HUD Overlay Grid (Layer 1 - Panels)
+        BorderPane hudPanelsLayout = new BorderPane();
+        hudPanelsLayout.setPickOnBounds(false); // allow clicks through empty spaces
 
-        Label headlineLabel = new Label("F.R.I.D.A.Y. System Online");
-        headlineLabel.getStyleClass().add("headline-label");
+        // Left Side: Greeting & Quick Actions
+        GreetingAndActionsPanel actionsPanel = new GreetingAndActionsPanel();
+        actionsPanel.setPickOnBounds(true);
+        BorderPane.setAlignment(actionsPanel, Pos.TOP_LEFT);
+        BorderPane.setMargin(actionsPanel, new Insets(4, 12, 4, 4));
+        hudPanelsLayout.setLeft(actionsPanel);
 
-        Label subLabel = new Label("Phase 2.2 — Translucent Glass Panel Foundation");
-        subLabel.getStyleClass().add("sub-label");
+        // Right Side: Tasks & Notes
+        VBox rightSide = new VBox(14);
+        rightSide.setPickOnBounds(true);
+        TasksPanel tasksPanel = new TasksPanel();
+        NotesPanel notesPanel = new NotesPanel();
+        rightSide.getChildren().addAll(tasksPanel, notesPanel);
+        rightSide.setMinWidth(220);
+        rightSide.setMaxWidth(260);
+        BorderPane.setAlignment(rightSide, Pos.TOP_RIGHT);
+        BorderPane.setMargin(rightSide, new Insets(4, 4, 4, 12));
+        hudPanelsLayout.setRight(rightSide);
 
-        HBox statusRow = new HBox(8);
-        statusRow.setAlignment(Pos.CENTER);
-
-        Circle pulseDot = new Circle(4);
-        pulseDot.getStyleClass().add("status-pulse-dot");
-
-        Label statusState = new Label("Glass Styling & Design Tokens Active");
-        statusState.getStyleClass().add("status-state-text");
-
-        statusRow.getChildren().addAll(pulseDot, statusState);
-
-        glassCard.getChildren().addAll(systemBadge, headlineLabel, subLabel, statusRow);
-        centerPane.getChildren().add(glassCard);
-
-        return centerPane;
+        stack.getChildren().addAll(hologramView, hudPanelsLayout);
+        return stack;
     }
 
-    private HBox createFooter() {
-        HBox footer = new HBox(12);
-        footer.getStyleClass().add("status-footer");
-        footer.setAlignment(Pos.CENTER_LEFT);
-        footer.setPadding(new Insets(6, 16, 8, 16));
+    private HBox createBottomBar() {
+        HBox bottomBox = new HBox(12);
+        bottomBox.getStyleClass().add("hud-bottom-bar");
+        bottomBox.setAlignment(Pos.CENTER);
+        bottomBox.setPadding(new Insets(4, 16, 12, 16));
 
-        Label leftStatus = new Label("FRAMELESS HUD BASE");
-        leftStatus.getStyleClass().add("footer-text");
+        // Bottom Left: System Status Gauges & Sparkline
+        SystemStatusPanel systemStatusPanel = new SystemStatusPanel();
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        // Spacer
+        Region spacerLeft = new Region();
+        HBox.setHgrow(spacerLeft, Priority.ALWAYS);
 
-        Label rightStatus = new Label("PHASE 2.2 — GLASS STYLING READY");
-        rightStatus.getStyleClass().add("footer-text");
+        // Center: Futuristic App Dock
+        BottomDock bottomDock = new BottomDock();
 
-        footer.getChildren().addAll(leftStatus, spacer, rightStatus);
-        return footer;
+        // Spacer
+        Region spacerRight = new Region();
+        HBox.setHgrow(spacerRight, Priority.ALWAYS);
+
+        // Bottom Right: Waveform & Microphone Status
+        WaveformMicPanel waveformMicPanel = new WaveformMicPanel();
+
+        bottomBox.getChildren().addAll(systemStatusPanel, spacerLeft, bottomDock, spacerRight, waveformMicPanel);
+        return bottomBox;
     }
 }
