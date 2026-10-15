@@ -411,3 +411,51 @@
     -fx-border-color: -fx-accent-primary;
     -fx-effect: dropshadow(gaussian, rgba(0, 229, 255, 0.6), 10, 0.2, 0, 0);
 }
+
+/* =============================================================================
+   STATE CONTROL BAR  (hologram state switcher pill)
+   ============================================================================= */
+.state-control-bar {
+    -fx-alignment: center;
+}
+
+.state-btn {
+    -fx-background-color: rgba(10, 22, 50, 0.72);
+    -fx-background-radius: 6px;
+    -fx-border-color: rgba(0, 229, 255, 0.22);
+    -fx-border-radius: 6px;
+    -fx-border-width: 1px;
+    -fx-text-fill: #6fa8c0;
+    -fx-font-size: 10px;
+    -fx-font-weight: 600;
+    -fx-padding: 4px 10px;
+    -fx-cursor: hand;
+}
+
+.state-btn:hover {
+    -fx-background-color: rgba(0, 229, 255, 0.14);
+    -fx-border-color: rgba(0, 229, 255, 0.50);
+    -fx-text-fill: #c8eeff;
+}
+
+.state-btn-active {
+    -fx-background-color: rgba(0, 229, 255, 0.22);
+    -fx-border-color: #00e5ff;
+    -fx-border-width: 1.2px;
+    -fx-text-fill: #00e5ff;
+    -fx-effect: dropshadow(gaussian, rgba(0, 229, 255, 0.45), 8, 0.15, 0, 0);
+}
+
+.state-btn-inactive {
+    -fx-opacity: 0.75;
+}
+
+/* Hologram canvas host — transparent, no extra chrome */
+.hologram-assistant-view {
+    -fx-background-color: transparent;
+}
+
+/* Hologram center workspace */
+.center-hud-workspace {
+    -fx-background-color: transparent;
+}
