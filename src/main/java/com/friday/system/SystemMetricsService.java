@@ -27,12 +27,12 @@ public final class SystemMetricsService {
 
     public static double getCpuUsagePercentage() {
         if (osBean != null) {
-            double load = osBean.getCpuLoad();
-            if (load < 0) {
-                load = osBean.getSystemCpuLoad();
-            }
-            if (load >= 0) {
-                return Math.min(100.0, Math.max(0.0, load * 100.0));
+            try {
+                double load = osBean.getCpuLoad();
+                if (load >= 0.0) {
+                    return Math.min(100.0, Math.max(0.0, load * 100.0));
+                }
+            } catch (Exception ignored) {
             }
         }
         // Fallback: estimate based on available processors load approximation
@@ -41,18 +41,24 @@ public final class SystemMetricsService {
 
     public static double getRamUsagePercentage() {
         if (osBean != null) {
-            long total = osBean.getTotalMemorySize();
-            long free = osBean.getFreeMemorySize();
-            if (total > 0) {
-                double used = (double) (total - free) / (double) total;
-                return Math.min(100.0, Math.max(0.0, used * 100.0));
+            try {
+                long total = osBean.getTotalMemorySize();
+                long free = osBean.getFreeMemorySize();
+                if (total > 0) {
+                    double used = (double) (total - free) / (double) total;
+                    return Math.min(100.0, Math.max(0.0, used * 100.0));
+                }
+            } catch (Exception ignored) {
             }
         }
         // JVM memory fallback
         long jvmTotal = Runtime.getRuntime().totalMemory();
         long jvmFree = Runtime.getRuntime().freeMemory();
-        double jvmUsed = (double) (jvmTotal - jvmFree) / (double) jvmTotal;
-        return Math.min(100.0, Math.max(0.0, jvmUsed * 100.0));
+        if (jvmTotal > 0) {
+            double jvmUsed = (double) (jvmTotal - jvmFree) / (double) jvmTotal;
+            return Math.min(100.0, Math.max(0.0, jvmUsed * 100.0));
+        }
+        return 50.0;
     }
 
     public static double getDiskUsagePercentage() {
