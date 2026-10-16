@@ -80,6 +80,7 @@ public final class MainWindow extends BorderPane {
         StackPane stack = new StackPane();
         stack.getStyleClass().add("center-hud-workspace");
         stack.setPadding(new Insets(6, 16, 6, 12));
+        stack.setMinSize(0, 0);
 
         // Layer 0 — Hologram Canvas
         StackPane.setAlignment(hv, Pos.CENTER);
@@ -87,6 +88,7 @@ public final class MainWindow extends BorderPane {
         // Layer 1 — HUD Panel overlay (picks on specific children only)
         BorderPane hudPanelsLayout = new BorderPane();
         hudPanelsLayout.setPickOnBounds(false);
+        hudPanelsLayout.setMinSize(0, 0);
 
         // Left Side: Greeting & Quick Actions
         GreetingAndActionsPanel actionsPanel = new GreetingAndActionsPanel(stateController);
@@ -122,6 +124,7 @@ public final class MainWindow extends BorderPane {
         bottomBox.getStyleClass().add("hud-bottom-bar");
         bottomBox.setAlignment(Pos.CENTER);
         bottomBox.setPadding(new Insets(4, 16, 12, 16));
+        bottomBox.setMinSize(0, 0);
 
         // Bottom Left: System Status Gauges
         SystemStatusPanel systemStatusPanel = new SystemStatusPanel();

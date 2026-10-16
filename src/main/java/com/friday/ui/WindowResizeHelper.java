@@ -1,7 +1,9 @@
 package com.friday.ui;
 
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 /**
@@ -38,7 +40,7 @@ public final class WindowResizeHelper {
 
     private void registerHandlers() {
         scene.setOnMouseMoved(event -> {
-            if (stage.isMaximized() || stage.isIconified()) {
+            if (stage.isMaximized() || stage.isIconified() || isStageFillsScreen(stage)) {
                 scene.setCursor(Cursor.DEFAULT);
                 return;
             }
@@ -53,6 +55,9 @@ public final class WindowResizeHelper {
         });
 
         scene.setOnMousePressed(event -> {
+            if (stage.isMaximized() || stage.isIconified() || isStageFillsScreen(stage)) {
+                return;
+            }
             if (event.isPrimaryButtonDown()) {
                 double x = event.getSceneX();
                 double y = event.getSceneY();
@@ -182,6 +187,12 @@ public final class WindowResizeHelper {
             case NONE -> Cursor.DEFAULT;
         };
         scene.setCursor(cursor);
+    }
+
+    private static boolean isStageFillsScreen(Stage stage) {
+        Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+        return stage.getX() <= bounds.getMinX() + 2 && stage.getY() <= bounds.getMinY() + 2
+                && stage.getWidth() >= bounds.getWidth() - 4 && stage.getHeight() >= bounds.getHeight() - 4;
     }
 }
 

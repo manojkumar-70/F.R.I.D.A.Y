@@ -13,24 +13,37 @@ import javafx.stage.StageStyle;
 
 public final class MainApp extends Application {
 
-    private static final double INITIAL_WIDTH = 1200.0;
-    private static final double INITIAL_HEIGHT = 780.0;
-    private static final double MIN_WIDTH = 960.0;
-    private static final double MIN_HEIGHT = 640.0;
+    private static final double DEFAULT_TARGET_WIDTH = 1180.0;
+    private static final double DEFAULT_TARGET_HEIGHT = 740.0;
+    private static final double MIN_WIDTH = 900.0;
+    private static final double MIN_HEIGHT = 580.0;
 
     @Override
     public void start(Stage primaryStage) {
         try {
+            Rectangle2D visualBounds = Screen.getPrimary().getVisualBounds();
+            double screenW = visualBounds.getWidth();
+            double screenH = visualBounds.getHeight();
+
+            // Sizing: adapt to current screen visual bounds so it never opens overflowing or clipped
+            double initialWidth = Math.min(DEFAULT_TARGET_WIDTH, Math.max(880.0, screenW * 0.90));
+            double initialHeight = Math.min(DEFAULT_TARGET_HEIGHT, Math.max(580.0, screenH * 0.88));
+
+            double minW = Math.min(MIN_WIDTH, screenW * 0.75);
+            double minH = Math.min(MIN_HEIGHT, screenH * 0.75);
+
             // Configure window properties
             primaryStage.setTitle("F.R.I.D.A.Y.");
             primaryStage.initStyle(StageStyle.TRANSPARENT);
-            primaryStage.setMinWidth(MIN_WIDTH);
-            primaryStage.setMinHeight(MIN_HEIGHT);
+            primaryStage.setMinWidth(minW);
+            primaryStage.setMinHeight(minH);
+            primaryStage.setMaxWidth(screenW);
+            primaryStage.setMaxHeight(screenH);
             primaryStage.setAlwaysOnTop(false);
 
             // Create root layout and scene
             MainWindow root = new MainWindow(primaryStage);
-            Scene scene = new Scene(root, INITIAL_WIDTH, INITIAL_HEIGHT);
+            Scene scene = new Scene(root, initialWidth, initialHeight);
             scene.setFill(Color.TRANSPARENT);
 
             // Load stylesheet
@@ -45,7 +58,7 @@ public final class MainApp extends Application {
             primaryStage.setScene(scene);
 
             // Position within primary screen bounds
-            centerOnPrimaryScreen(primaryStage, INITIAL_WIDTH, INITIAL_HEIGHT);
+            centerOnPrimaryScreen(primaryStage, visualBounds, initialWidth, initialHeight);
 
             primaryStage.show();
         } catch (Exception ex) {
@@ -55,12 +68,11 @@ public final class MainApp extends Application {
         }
     }
 
-    private void centerOnPrimaryScreen(Stage stage, double width, double height) {
-        Rectangle2D visualBounds = Screen.getPrimary().getVisualBounds();
+    private void centerOnPrimaryScreen(Stage stage, Rectangle2D visualBounds, double width, double height) {
         double targetX = visualBounds.getMinX() + (visualBounds.getWidth() - width) / 2.0;
         double targetY = visualBounds.getMinY() + (visualBounds.getHeight() - height) / 2.0;
 
-        // Ensure within visible screen bounds
+        // Ensure strictly within visible screen bounds
         double clampedX = Math.max(visualBounds.getMinX(), Math.min(targetX, visualBounds.getMaxX() - width));
         double clampedY = Math.max(visualBounds.getMinY(), Math.min(targetY, visualBounds.getMaxY() - height));
 

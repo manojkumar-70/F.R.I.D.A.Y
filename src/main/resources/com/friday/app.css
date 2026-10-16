@@ -94,14 +94,32 @@
 .window-control-btn {
     -fx-background-color: transparent;
     -fx-text-fill: -fx-text-secondary;
-    -fx-font-size: 12px;
+    -fx-font-size: 13px;
     -fx-font-weight: bold;
     -fx-padding: 3px 12px;
     -fx-background-radius: 4px;
     -fx-cursor: hand;
+    -fx-alignment: center;
 }
 
-.control-btn-minimize:hover {
+.control-btn-minimize {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-primary;
+}
+
+.control-btn-maximize {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.control-btn-close {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.control-btn-minimize:hover,
+.control-btn-maximize:hover {
     -fx-background-color: -fx-surface-hover;
     -fx-text-fill: -fx-accent-primary;
 }

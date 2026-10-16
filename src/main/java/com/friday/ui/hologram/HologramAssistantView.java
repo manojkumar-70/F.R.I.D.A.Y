@@ -104,7 +104,27 @@ public final class HologramAssistantView extends StackPane {
             if (is != null) avatarImage = new Image(is);
         } catch (Exception ignored) {}
 
-        canvas = new Canvas(480, 520);
+        canvas = new Canvas(440, 440) {
+            @Override
+            public double minWidth(double height) {
+                return 100;
+            }
+
+            @Override
+            public double minHeight(double width) {
+                return 100;
+            }
+
+            @Override
+            public double prefWidth(double height) {
+                return 440;
+            }
+
+            @Override
+            public double prefHeight(double width) {
+                return 440;
+            }
+        };
         getChildren().add(canvas);
 
         widthProperty() .addListener((obs, o, n) -> resizeCanvas());
@@ -112,6 +132,12 @@ public final class HologramAssistantView extends StackPane {
 
         initParticles();
         startAnimation();
+    }
+
+    @Override
+    protected void layoutChildren() {
+        super.layoutChildren();
+        resizeCanvas();
     }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -129,15 +155,22 @@ public final class HologramAssistantView extends StackPane {
     private void resizeCanvas() {
         double w = getWidth();
         double h = getHeight();
-        if (w > 0) canvas.setWidth (Math.max(320, Math.min(700, w * 0.97)));
-        if (h > 0) canvas.setHeight(Math.max(380, Math.min(760, h * 0.97)));
-        initParticles();
+        if (w > 0 && h > 0) {
+            // Keep hologram circular and responsive to both width and height constraints
+            double available = Math.min(w * 0.95, h * 0.95);
+            double size = Math.max(160.0, Math.min(620.0, available));
+            if (canvas.getWidth() != size || canvas.getHeight() != size) {
+                canvas.setWidth(size);
+                canvas.setHeight(size);
+                initParticles();
+            }
+        }
     }
 
     private void initParticles() {
         particles.clear();
-        double w = Math.max(480, canvas.getWidth());
-        double h = Math.max(520, canvas.getHeight());
+        double w = Math.max(200.0, canvas.getWidth());
+        double h = Math.max(200.0, canvas.getHeight());
         for (int i = 0; i < PARTICLE_COUNT; i++) {
             particles.add(new Particle(
                     random.nextDouble() * w,
