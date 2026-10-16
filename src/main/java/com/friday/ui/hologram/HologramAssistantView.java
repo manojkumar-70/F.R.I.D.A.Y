@@ -259,8 +259,15 @@ public final class HologramAssistantView extends StackPane {
     // =========================================================================
 
     private void renderBackgroundAura(GraphicsContext gc, double cx, double cy, AssistantState state) {
-        double r     = Math.min(cx, cy) * 0.96;
-        double pulse = 0.045 * Math.sin(pulsePhase);
+        double maxR  = Math.min(cx, cy);
+        double breath = Math.sin(pulsePhase);
+        double breathHarmonic = Math.sin(pulsePhase * 0.5);
+        double breathingFactor = 0.70 * breath + 0.30 * breathHarmonic;
+
+        double r = (state == AssistantState.IDLE)
+                ? maxR * (0.94 + 0.025 * breathingFactor)
+                : maxR * 0.96;
+        double pulse = 0.045 * breath;
 
         Color inner, mid;
         switch (state) {
@@ -271,6 +278,10 @@ public final class HologramAssistantView extends StackPane {
             case THINKING -> {
                 inner = Color.rgb(30,  100, 255, clamp(0.17 + pulse));
                 mid   = Color.rgb(0,   60,  160, 0.09);
+            }
+            case IDLE -> {
+                inner = Color.rgb(0,   229, 255, clamp(0.15 + 0.05 * breathingFactor));
+                mid   = Color.rgb(0,   119, 182, clamp(0.075 + 0.02 * breathingFactor));
             }
             default -> {
                 inner = Color.rgb(0,   229, 255, clamp(0.15 + pulse));
@@ -283,49 +294,171 @@ public final class HologramAssistantView extends StackPane {
                 new Stop(0.5, mid),
                 new Stop(1.0, Color.rgb(10, 17, 36, 0.0))));
         gc.fillOval(cx - r, cy - r, r * 2, r * 2);
+
+        // Secondary subtle inner aura in IDLE for layered holographic depth
+        if (state == AssistantState.IDLE) {
+            double innerAuraR = maxR * 0.42 * (0.96 + 0.04 * breathingFactor);
+            gc.setFill(new RadialGradient(0, 0, cx, cy, innerAuraR, false, CycleMethod.NO_CYCLE,
+                    new Stop(0.0, Color.rgb(0, 229, 255, clamp(0.07 + 0.035 * breathingFactor))),
+                    new Stop(0.65, Color.rgb(0, 119, 182, clamp(0.03 + 0.015 * breathingFactor))),
+                    new Stop(1.0, Color.rgb(6, 13, 31, 0.0))));
+            gc.fillOval(cx - innerAuraR, cy - innerAuraR, innerAuraR * 2, innerAuraR * 2);
+        }
     }
 
     // =========================================================================
-    //  IDLE — slow rotating concentric rings, subtle glow and particles
+    //  IDLE — slow rotating concentric rings, subtle glow, scanning & breathing
     // =========================================================================
 
     private void renderIdleRings(GraphicsContext gc, double cx, double cy) {
         gc.save();
-        double r1 = Math.min(cx, cy) * 0.84;
-        double r2 = Math.min(cx, cy) * 0.66;
-        double r3 = Math.min(cx, cy) * 0.46;
+        double maxR = Math.min(cx, cy);
+        double rOuter = maxR * 0.86;
+        double rMid   = maxR * 0.68;
+        double rInner = maxR * 0.46;
 
-        // Outer dotted ring
-        gc.setStroke(withAlpha(CYAN_FULL, 0.20));
+        double breath = Math.sin(pulsePhase);
+        double breathHarmonic = Math.sin(pulsePhase * 0.5);
+        double breathingFactor = 0.70 * breath + 0.30 * breathHarmonic;
+
+        // 1. Outer telemetry compass ring with precision calibration tick marks
+        renderIdleTelemetryRing(gc, cx, cy, rOuter);
+
+        // 2. Breathing resonance halo — expands and contracts organically
+        double rBreath = rOuter * 0.91 + breathingFactor * (rOuter * 0.024);
+        gc.setStroke(withAlpha(CYAN_BRIGHT, 0.18 + 0.10 * breathingFactor));
         gc.setLineWidth(1.0);
-        gc.setLineDashes(6.0, 10.0);
-        gc.strokeOval(cx - r1, cy - r1, r1 * 2, r1 * 2);
+        gc.setLineDashes(5.0, 9.0);
+        gc.strokeOval(cx - rBreath, cy - rBreath, rBreath * 2, rBreath * 2);
 
-        // Mid segmented arc — rotates slowly
-        gc.setStroke(withAlpha(CYAN_MID, 0.30));
-        gc.setLineWidth(1.5);
-        gc.setLineDashes(42.0, 20.0, 16.0, 20.0);
-        gc.strokeArc(cx - r2, cy - r2, r2 * 2, r2 * 2, angle, 270, ArcType.OPEN);
+        // 3. Mid dual-track segmented data arcs (clockwise + counter-rotating)
+        renderIdleDataArcs(gc, cx, cy, rMid);
 
-        // Inner counter-rotating ring
-        gc.setStroke(withAlpha(CYAN_FULL, 0.40));
-        gc.setLineWidth(1.2);
-        gc.setLineDashes(18.0, 14.0);
-        gc.strokeArc(cx - r3, cy - r3, r3 * 2, r3 * 2, -angle * 1.4, 320, ArcType.OPEN);
+        // 4. Standby telemetry scanning accent (slow, subtle radar sweep)
+        renderIdleScanningAccent(gc, cx, cy, rInner, rMid);
 
-        // Crosshair ticks at cardinal points
-        gc.setStroke(withAlpha(CYAN_FULL, 0.18));
-        gc.setLineWidth(1.0);
+        // 5. Inner precision reticle ring with inward notch brackets
+        renderIdleInnerReticle(gc, cx, cy, rInner);
+
+        // 6. Innermost core harmonic breathing rings
+        double pulseR1 = rInner * 0.60 + breath * (rInner * 0.07);
+        gc.setStroke(withAlpha(CYAN_BRIGHT, 0.24 + 0.10 * breath));
+        gc.setLineWidth(1.1);
         gc.setLineDashes(null);
-        drawCardinalTicks(gc, cx, cy, r1, 14);
+        gc.strokeOval(cx - pulseR1, cy - pulseR1, pulseR1 * 2, pulseR1 * 2);
 
-        // Gentle pulse ring at innermost
-        double pulseR = r3 * 0.60 + Math.sin(pulsePhase) * r3 * 0.06;
-        gc.setStroke(withAlpha(CYAN_BRIGHT, 0.22 + 0.08 * Math.sin(pulsePhase)));
-        gc.setLineWidth(1.0);
-        gc.strokeOval(cx - pulseR, cy - pulseR, pulseR * 2, pulseR * 2);
+        double pulseR2 = rInner * 0.42 + breathHarmonic * (rInner * 0.05);
+        gc.setStroke(withAlpha(CYAN_MID, 0.18 + 0.08 * breathHarmonic));
+        gc.setLineWidth(0.9);
+        gc.setLineDashes(14.0, 10.0);
+        gc.strokeArc(cx - pulseR2, cy - pulseR2, pulseR2 * 2, pulseR2 * 2, -angle * 0.6, 290, ArcType.OPEN);
 
         gc.restore();
+    }
+
+    private void renderIdleTelemetryRing(GraphicsContext gc, double cx, double cy, double rOuter) {
+        // Outer guide perimeter
+        gc.setStroke(withAlpha(CYAN_MID, 0.20));
+        gc.setLineWidth(1.0);
+        gc.setLineDashes(null);
+        gc.strokeOval(cx - rOuter, cy - rOuter, rOuter * 2, rOuter * 2);
+
+        // Telemetry calibration ticks around perimeter (every 15 degrees)
+        for (int deg = 0; deg < 360; deg += 15) {
+            double rad = Math.toRadians(deg);
+            double cos = Math.cos(rad);
+            double sin = Math.sin(rad);
+
+            double len;
+            double alpha;
+            if (deg % 90 == 0) {
+                len = 11.0;
+                alpha = 0.38;
+            } else if (deg % 45 == 0) {
+                len = 7.0;
+                alpha = 0.25;
+            } else {
+                len = 3.5;
+                alpha = 0.14;
+            }
+
+            gc.setStroke(withAlpha(CYAN_FULL, alpha));
+            gc.setLineWidth(deg % 90 == 0 ? 1.4 : 1.0);
+            gc.strokeLine(
+                    cx + cos * (rOuter - len), cy + sin * (rOuter - len),
+                    cx + cos * rOuter,         cy + sin * rOuter);
+        }
+
+        // Cardinal crosshair ticks extending outward
+        gc.setStroke(withAlpha(CYAN_FULL, 0.25));
+        gc.setLineWidth(1.2);
+        drawCardinalTicks(gc, cx, cy, rOuter, 14);
+    }
+
+    private void renderIdleDataArcs(GraphicsContext gc, double cx, double cy, double rMid) {
+        // Two symmetric segmented arcs rotating clockwise at angle (20 deg/s)
+        gc.setStroke(withAlpha(CYAN_FULL, 0.32));
+        gc.setLineWidth(1.6);
+        gc.setLineDashes(null);
+        gc.strokeArc(cx - rMid, cy - rMid, rMid * 2, rMid * 2, angle, 105, ArcType.OPEN);
+        gc.strokeArc(cx - rMid, cy - rMid, rMid * 2, rMid * 2, angle + 180, 105, ArcType.OPEN);
+
+        // Glowing node dots at the leading edge of each arc
+        double radLead1 = Math.toRadians(-angle);
+        double radLead2 = Math.toRadians(-(angle + 180));
+        gc.setFill(withAlpha(CYAN_BRIGHT, 0.65));
+        gc.fillOval(cx + Math.cos(radLead1) * rMid - 2.5, cy + Math.sin(radLead1) * rMid - 2.5, 5, 5);
+        gc.fillOval(cx + Math.cos(radLead2) * rMid - 2.5, cy + Math.sin(radLead2) * rMid - 2.5, 5, 5);
+
+        // Counter-rotating inner track (dashed)
+        double rMidInner = rMid * 0.85;
+        gc.setStroke(withAlpha(CYAN_MID, 0.28));
+        gc.setLineWidth(1.2);
+        gc.setLineDashes(22.0, 14.0, 6.0, 14.0);
+        gc.strokeArc(cx - rMidInner, cy - rMidInner, rMidInner * 2, rMidInner * 2, -angle * 0.75, 295, ArcType.OPEN);
+    }
+
+    private void renderIdleScanningAccent(GraphicsContext gc, double cx, double cy,
+                                          double rInner, double rMid) {
+        // Slow telemetry radar sweep accent (standby scanning at ~23 deg/s)
+        double scanHead = (angle * 1.15) % 360;
+        double headRad  = Math.toRadians(-scanHead);
+
+        // Faint radial sweep beam between inner and mid ring
+        gc.setStroke(withAlpha(CYAN_BRIGHT, 0.20));
+        gc.setLineWidth(1.0);
+        gc.setLineDashes(null);
+        gc.strokeLine(
+                cx + Math.cos(headRad) * rInner, cy + Math.sin(headRad) * rInner,
+                cx + Math.cos(headRad) * rMid,   cy + Math.sin(headRad) * rMid);
+
+        // Leading bright arc on mid ring
+        gc.setStroke(withAlpha(CYAN_BRIGHT, 0.38));
+        gc.setLineWidth(2.0);
+        gc.strokeArc(cx - rMid, cy - rMid, rMid * 2, rMid * 2, scanHead, 18, ArcType.OPEN);
+
+        // Trailing fade arc in deep cyan-blue
+        gc.setStroke(withAlpha(BLUE_SCAN, 0.14));
+        gc.setLineWidth(1.5);
+        gc.strokeArc(cx - rMid, cy - rMid, rMid * 2, rMid * 2, scanHead - 38, 38, ArcType.OPEN);
+    }
+
+    private void renderIdleInnerReticle(GraphicsContext gc, double cx, double cy, double rInner) {
+        // Counter-rotating segmented inner ring
+        gc.setStroke(withAlpha(CYAN_FULL, 0.36));
+        gc.setLineWidth(1.2);
+        gc.setLineDashes(18.0, 14.0);
+        gc.strokeArc(cx - rInner, cy - rInner, rInner * 2, rInner * 2, -angle * 1.35, 315, ArcType.OPEN);
+
+        // Inward precision reticle notch ticks
+        gc.setStroke(withAlpha(CYAN_FULL, 0.25));
+        gc.setLineWidth(1.0);
+        gc.setLineDashes(null);
+        double tick = 7.0;
+        gc.strokeLine(cx - rInner, cy, cx - rInner + tick, cy);
+        gc.strokeLine(cx + rInner, cy, cx + rInner - tick, cy);
+        gc.strokeLine(cx, cy - rInner, cx, cy - rInner + tick);
+        gc.strokeLine(cx, cy + rInner, cx, cy + rInner - tick);
     }
 
     // =========================================================================
@@ -642,17 +775,21 @@ public final class HologramAssistantView extends StackPane {
         // Chest core — colour / brightness vary by state and amplitude
         double coreY = headY + 93;
         double amp   = smoothAmp;
+        double coreBreath = 0.5 + 0.5 * Math.sin(pulsePhase);
         Color coreCenter = switch (state) {
             case ALERT    -> Color.rgb(255, 80,  80,  0.92);
             case SPEAKING -> Color.rgb(255, 255, 255, clamp(0.68 + amp * 0.32));
+            case IDLE     -> Color.rgb(255, 255, 255, clamp(0.85 + 0.15 * coreBreath));
             default       -> Color.rgb(255, 255, 255, 0.92);
         };
-        gc.setFill(new RadialGradient(0, 0, cx, coreY, 22, false, CycleMethod.NO_CYCLE,
+        double coreGlowR = (state == AssistantState.IDLE) ? (19.0 + 4.5 * coreBreath) : 22.0;
+        double coreHaloA = (state == AssistantState.IDLE) ? (0.68 + 0.18 * coreBreath) : 0.78;
+        gc.setFill(new RadialGradient(0, 0, cx, coreY, coreGlowR, false, CycleMethod.NO_CYCLE,
                 new Stop(0.0, coreCenter),
-                new Stop(0.4, Color.rgb(0,  229, 255, 0.78)),
+                new Stop(0.4, Color.rgb(0,  229, 255, coreHaloA)),
                 new Stop(1.0, Color.rgb(0,  119, 182, 0.00))));
         gc.fillOval(cx - 17, coreY - 17, 34, 34);
-        gc.setStroke(withAlpha(CYAN_FULL, 0.88));
+        gc.setStroke(withAlpha(CYAN_FULL, (state == AssistantState.IDLE) ? (0.75 + 0.20 * coreBreath) : 0.88));
         gc.setLineWidth(1.4);
         gc.strokeOval(cx - 11, coreY - 11, 22, 22);
 

@@ -18,6 +18,8 @@ public final class MainApp extends Application {
     private static final double MIN_WIDTH = 900.0;
     private static final double MIN_HEIGHT = 580.0;
 
+    private MainWindow root;
+
     @Override
     public void start(Stage primaryStage) {
         try {
@@ -42,7 +44,7 @@ public final class MainApp extends Application {
             primaryStage.setAlwaysOnTop(false);
 
             // Create root layout and scene
-            MainWindow root = new MainWindow(primaryStage);
+            root = new MainWindow(primaryStage);
             Scene scene = new Scene(root, initialWidth, initialHeight);
             scene.setFill(Color.TRANSPARENT);
 
@@ -80,6 +82,14 @@ public final class MainApp extends Application {
         stage.setY(clampedY);
         stage.setWidth(width);
         stage.setHeight(height);
+    }
+
+    @Override
+    public void stop() throws Exception {
+        if (root != null) {
+            root.shutdown();
+        }
+        super.stop();
     }
 
     public static void main(String[] args) {
