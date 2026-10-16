@@ -201,12 +201,13 @@ public final class HologramAssistantView extends StackPane {
                     case LISTENING -> 26.0;
                     case THINKING  -> 82.0;
                     case SPEAKING  -> 34.0;
-                    case ALERT     -> 10.0;
+                    case EXECUTING -> 54.0;
+                    case ERROR     -> 8.0;
                 };
 
                 angle      += dt * rotSpeed;
                 pulsePhase += dt * 2.0;
-                alertPhase += dt * 4.2;
+                alertPhase += dt * 3.2; // calm, non-distracting alert cadence
                 scanAngle  += dt * 108.0;
 
                 // Low-pass smooth the amplitude to avoid flicker
@@ -239,7 +240,8 @@ public final class HologramAssistantView extends StackPane {
             case LISTENING -> renderListeningRings(gc, cx, cy);
             case THINKING  -> renderThinkingRings (gc, cx, cy);
             case SPEAKING  -> renderSpeakingRings (gc, cx, cy);
-            case ALERT     -> renderAlertRings    (gc, cx, cy);
+            case EXECUTING -> renderExecutingRings(gc, cx, cy);
+            case ERROR     -> renderErrorRings    (gc, cx, cy);
         }
 
         renderParticles(gc, w, h, state);
@@ -271,9 +273,13 @@ public final class HologramAssistantView extends StackPane {
 
         Color inner, mid;
         switch (state) {
-            case ALERT -> {
-                inner = Color.rgb(200, 30,  30,  clamp(0.14 + pulse));
-                mid   = Color.rgb(120, 20,  20,  0.07);
+            case ERROR -> {
+                inner = Color.rgb(220, 36,  36,  clamp(0.16 + pulse));
+                mid   = Color.rgb(130, 20,  20,  0.08);
+            }
+            case EXECUTING -> {
+                inner = Color.rgb(0,   220, 255, clamp(0.16 + pulse));
+                mid   = Color.rgb(220, 150, 30,  0.08);
             }
             case THINKING -> {
                 inner = Color.rgb(30,  100, 255, clamp(0.17 + pulse));
@@ -647,34 +653,139 @@ public final class HologramAssistantView extends StackPane {
     }
 
     // =========================================================================
-    //  ALERT — restrained red/amber accents, warning triangles, pulsing rings
+    //  EXECUTING — orbital data ticks, directional progress arc, cyan-amber accent
     // =========================================================================
 
-    private void renderAlertRings(GraphicsContext gc, double cx, double cy) {
+    private void renderExecutingRings(GraphicsContext gc, double cx, double cy) {
+        gc.save();
+        double r1 = Math.min(cx, cy) * 0.84;
+        double r2 = Math.min(cx, cy) * 0.64;
+        double r3 = Math.min(cx, cy) * 0.45;
+
+        // Outer telemetry perimeter with orbital data ticks
+        gc.setStroke(withAlpha(CYAN_MID, 0.25));
+        gc.setLineWidth(1.0);
+        gc.setLineDashes(null);
+        gc.strokeOval(cx - r1, cy - r1, r1 * 2, r1 * 2);
+
+        // Orbital tick segments every 15°
+        for (int deg = 0; deg < 360; deg += 15) {
+            double rad = Math.toRadians(deg);
+            double cos = Math.cos(rad);
+            double sin = Math.sin(rad);
+            double tickLen = (deg % 45 == 0) ? 8.0 : 4.0;
+            Color tickColor = (deg % 90 == 0) ? AMBER_WARN : CYAN_FULL;
+            gc.setStroke(withAlpha(tickColor, 0.35));
+            gc.setLineWidth(deg % 90 == 0 ? 1.4 : 1.0);
+            gc.strokeLine(
+                    cx + cos * (r1 - tickLen), cy + sin * (r1 - tickLen),
+                    cx + cos * r1,             cy + sin * r1);
+        }
+
+        // Directional progress arc
+        double progress = controller.getTaskProgress();
+        if (progress >= 0.0) {
+            // Determinate progress arc starting from top (12 o'clock, 90°) sweeping clockwise
+            gc.setStroke(withAlpha(CYAN_MID, 0.20));
+            gc.setLineWidth(2.2);
+            gc.setLineDashes(null);
+            gc.strokeOval(cx - r2, cy - r2, r2 * 2, r2 * 2);
+
+            double sweep = Math.max(2.0, progress * 360.0);
+            gc.setStroke(withAlpha(AMBER_WARN, 0.82));
+            gc.setLineWidth(2.4);
+            gc.strokeArc(cx - r2, cy - r2, r2 * 2, r2 * 2, 90.0, -sweep, ArcType.OPEN);
+
+            // Progress head node marker at tip of clockwise arc
+            double headRad = Math.toRadians(90.0 - sweep);
+            double hx = cx + Math.cos(headRad) * r2;
+            double hy = cy - Math.sin(headRad) * r2;
+            gc.setFill(withAlpha(AMBER_WARN, 0.95));
+            gc.fillOval(hx - 3, hy - 3, 6, 6);
+        } else {
+            // Indeterminate rotating progress arcs
+            double sweepAngle = (angle * 1.6) % 360;
+            gc.setStroke(withAlpha(AMBER_WARN, 0.72));
+            gc.setLineWidth(2.2);
+            gc.setLineDashes(null);
+            gc.strokeArc(cx - r2, cy - r2, r2 * 2, r2 * 2, sweepAngle, 120, ArcType.OPEN);
+
+            // Counter-rotating secondary cyan data track
+            gc.setStroke(withAlpha(CYAN_FULL, 0.38));
+            gc.setLineWidth(1.4);
+            gc.setLineDashes(18.0, 12.0);
+            gc.strokeArc(cx - r2, cy - r2, r2 * 2, r2 * 2, -(sweepAngle * 0.7) % 360, 240, ArcType.OPEN);
+        }
+
+        // Inner segmented reticle with amber highlights
+        gc.setStroke(withAlpha(CYAN_BRIGHT, 0.32));
+        gc.setLineWidth(1.2);
+        gc.setLineDashes(8.0, 8.0);
+        gc.strokeOval(cx - r3, cy - r3, r3 * 2, r3 * 2);
+
+        // Rotating crosshair in center reticle
+        double crossAngle = Math.toRadians(angle * 0.8);
+        double cosC = Math.cos(crossAngle) * (r3 * 0.35);
+        double sinC = Math.sin(crossAngle) * (r3 * 0.35);
+        gc.setStroke(withAlpha(AMBER_WARN, 0.45));
+        gc.setLineWidth(1.2);
+        gc.setLineDashes(null);
+        gc.strokeLine(cx - cosC, cy - sinC, cx + cosC, cy + sinC);
+        gc.strokeLine(cx + sinC, cy - cosC, cx - sinC, cy + cosC);
+
+        gc.restore();
+    }
+
+    // =========================================================================
+    //  ERROR — restrained crimson perimeter pulse, warning brackets, recovery notice
+    // =========================================================================
+
+    private void renderErrorRings(GraphicsContext gc, double cx, double cy) {
         gc.save();
         double r1 = Math.min(cx, cy) * 0.82;
         double r2 = Math.min(cx, cy) * 0.62;
 
-        double blink = 0.5 + 0.5 * Math.sin(alertPhase);
+        // Gentle, restrained alert breathing pulse (approx 0.4 Hz, never rapid flashing)
+        double blink = 0.5 + 0.5 * Math.sin(alertPhase * 0.6);
 
-        // Red outer ring (slow blink)
-        gc.setStroke(withAlpha(RED_ALERT, 0.48 + blink * 0.52));
+        // Crimson outer ring (steady, restrained pulse)
+        gc.setStroke(withAlpha(RED_ALERT, 0.45 + blink * 0.45));
         gc.setLineWidth(2.2);
         gc.setLineDashes(null);
         gc.strokeOval(cx - r1, cy - r1, r1 * 2, r1 * 2);
 
         // Amber dashed mid ring (slow rotation, opposite direction)
-        gc.setStroke(withAlpha(AMBER_WARN, 0.42 + blink * 0.30));
+        gc.setStroke(withAlpha(AMBER_WARN, 0.38 + blink * 0.25));
         gc.setLineWidth(1.4);
         gc.setLineDashes(16.0, 10.0);
-        gc.strokeArc(cx - r2, cy - r2, r2 * 2, r2 * 2, angle, 250, ArcType.OPEN);
+        gc.strokeArc(cx - r2, cy - r2, r2 * 2, r2 * 2, -angle * 0.5, 250, ArcType.OPEN);
 
         // Warning triangles at cardinal points
         gc.setLineDashes(null);
-        drawWarningTriangle(gc, cx,       cy - r1 - 18, 11, blink);
-        drawWarningTriangle(gc, cx,       cy + r1 + 18, 11, blink);
-        drawWarningTriangle(gc, cx - r1 - 18, cy,       11, blink);
-        drawWarningTriangle(gc, cx + r1 + 18, cy,       11, blink);
+        drawWarningTriangle(gc, cx,       cy - r1 - 18, 10, blink);
+        drawWarningTriangle(gc, cx,       cy + r1 + 18, 10, blink);
+        drawWarningTriangle(gc, cx - r1 - 18, cy,       10, blink);
+        drawWarningTriangle(gc, cx + r1 + 18, cy,       10, blink);
+
+        // Error message banner and recovery guide
+        String errorMsg = controller.getLastErrorMessage();
+        if (errorMsg != null && !errorMsg.isBlank()) {
+            String trimmed = errorMsg.trim();
+            if (trimmed.length() > 36) {
+                trimmed = trimmed.substring(0, 33) + "...";
+            }
+            gc.setFill(Color.rgb(255, 120, 120, 0.90));
+            gc.setFont(SYSTEM_11);
+            String banner = "⚠ " + trimmed;
+            double tw = banner.length() * 5.8;
+            gc.fillText(banner, Math.max(10.0, cx - tw / 2), cy - Math.min(cx, cy) * 0.72);
+        }
+
+        gc.setFill(Color.rgb(255, 209, 102, 0.75));
+        gc.setFont(SYSTEM_11);
+        String recovery = "[Click IDLE to recover]";
+        double rw = recovery.length() * 5.8;
+        gc.fillText(recovery, Math.max(10.0, cx - rw / 2), cy + Math.min(cx, cy) * 0.74);
 
         gc.restore();
     }
@@ -709,9 +820,10 @@ public final class HologramAssistantView extends StackPane {
 
             double a = clamp(p.alpha);
             Color c = switch (state) {
-                case ALERT    -> Color.rgb(255, 120, 50, a);
-                case THINKING -> Color.rgb(60,  180, 255, a);
-                default       -> Color.rgb(0,   229, 255, a);
+                case ERROR     -> Color.rgb(255, 70,  60,  a);
+                case EXECUTING -> Color.rgb(255, 190, 60,  a);
+                case THINKING  -> Color.rgb(60,  180, 255, a);
+                default        -> Color.rgb(0,   229, 255, a);
             };
             gc.setFill(c);
             gc.fillOval(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
@@ -777,10 +889,11 @@ public final class HologramAssistantView extends StackPane {
         double amp   = smoothAmp;
         double coreBreath = 0.5 + 0.5 * Math.sin(pulsePhase);
         Color coreCenter = switch (state) {
-            case ALERT    -> Color.rgb(255, 80,  80,  0.92);
-            case SPEAKING -> Color.rgb(255, 255, 255, clamp(0.68 + amp * 0.32));
-            case IDLE     -> Color.rgb(255, 255, 255, clamp(0.85 + 0.15 * coreBreath));
-            default       -> Color.rgb(255, 255, 255, 0.92);
+            case ERROR     -> Color.rgb(255, 70,  70,  0.92);
+            case EXECUTING -> Color.rgb(255, 215, 120, 0.95);
+            case SPEAKING  -> Color.rgb(255, 255, 255, clamp(0.68 + amp * 0.32));
+            case IDLE      -> Color.rgb(255, 255, 255, clamp(0.85 + 0.15 * coreBreath));
+            default        -> Color.rgb(255, 255, 255, 0.92);
         };
         double coreGlowR = (state == AssistantState.IDLE) ? (19.0 + 4.5 * coreBreath) : 22.0;
         double coreHaloA = (state == AssistantState.IDLE) ? (0.68 + 0.18 * coreBreath) : 0.78;
@@ -807,9 +920,11 @@ public final class HologramAssistantView extends StackPane {
     /** Small radial-gradient dot — used for eye highlights. */
     private void renderGlowDot(GraphicsContext gc, double x, double y,
                                  double r, AssistantState state) {
-        Color c = state == AssistantState.ALERT
-                ? Color.rgb(255, 80, 80, 0.9)
-                : Color.rgb(0, 229, 255, 0.9);
+        Color c = switch (state) {
+            case ERROR     -> Color.rgb(255, 70,  70,  0.95);
+            case EXECUTING -> Color.rgb(255, 200, 100, 0.92);
+            default        -> Color.rgb(0,   229, 255, 0.90);
+        };
         gc.setFill(new RadialGradient(0, 0, x, y, r, false, CycleMethod.NO_CYCLE,
                 new Stop(0.0, c),
                 new Stop(1.0, Color.rgb(0, 0, 0, 0.0))));
@@ -828,9 +943,10 @@ public final class HologramAssistantView extends StackPane {
         gc.save();
 
         Color orbCenter = switch (state) {
-            case ALERT    -> Color.rgb(255, 100, 80, 0.90);
-            case THINKING -> Color.rgb(80,  160, 255, 0.90);
-            default       -> Color.rgb(255, 255, 255, 0.90);
+            case ERROR     -> Color.rgb(255, 80,  60,  0.90);
+            case EXECUTING -> Color.rgb(255, 200, 90,  0.90);
+            case THINKING  -> Color.rgb(80,  160, 255, 0.90);
+            default        -> Color.rgb(255, 255, 255, 0.90);
         };
         gc.setFill(new RadialGradient(0, 0, orbX, orbY, 36, false, CycleMethod.NO_CYCLE,
                 new Stop(0.0, orbCenter),
@@ -874,14 +990,26 @@ public final class HologramAssistantView extends StackPane {
             case SPEAKING  -> controller.isSpeechAvailable()
                     ? "▶ SPEAKING"
                     : "▶ SPEAKING  [no TTS — stub mode]";
-            case ALERT     -> "⚠  ALERT";
+            case EXECUTING -> {
+                double p = controller.getTaskProgress();
+                yield (p >= 0.0)
+                        ? String.format("⚙ EXECUTING (%d%%)…", (int) (p * 100))
+                        : "⚙ EXECUTING TASK…";
+            }
+            case ERROR     -> {
+                String msg = controller.getLastErrorMessage();
+                yield (msg != null && !msg.isBlank())
+                        ? "⚠ " + msg.toUpperCase()
+                        : "⚠ SYSTEM ERROR";
+            }
         };
         if (label == null) return;
 
         Color labelColor = switch (state) {
-            case ALERT    -> Color.rgb(255, 80,  80,  0.92);
-            case THINKING -> Color.rgb(80,  200, 255, 0.88);
-            default       -> Color.rgb(0,   229, 255, 0.88);
+            case ERROR     -> Color.rgb(255, 80,  80,  0.95);
+            case EXECUTING -> Color.rgb(255, 200, 90,  0.92);
+            case THINKING  -> Color.rgb(80,  200, 255, 0.88);
+            default        -> Color.rgb(0,   229, 255, 0.88);
         };
 
         gc.save();

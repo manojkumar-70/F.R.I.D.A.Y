@@ -19,7 +19,7 @@ import javax.sound.sampled.TargetDataLine;
  * If no microphone hardware is available, isAvailable() returns false
  * and getAmplitude() always returns 0.0.
  */
-public final class MicrophoneService {
+public final class MicrophoneService implements MicrophoneAudioService {
 
     private static final int SAMPLE_RATE   = 16000; // Hz
     private static final int SAMPLE_SIZE   = 16;    // bits
@@ -47,38 +47,85 @@ public final class MicrophoneService {
         this.available = canOpen;
     }
 
-    /** Start capturing microphone audio. Safe to call multiple times. */
-    public void start() {
-        if (!available || running) return;
-        running = true;
+    /**
+     * Start capturing microphone audio. Safe to call multiple times.
+     *
+     * @return true if capture is running; false if hardware is unavailable or failed to open.
+     */
+    @Override
+    public synchronized boolean start() {
+        if (!available) return false;
+        if (running) return true;
         try {
+            if (line == null) return false;
             line.open();
             line.start();
-        } catch (LineUnavailableException e) {
+            running = true;
+        } catch (LineUnavailableException | SecurityException e) {
+            if (line != null && line.isOpen()) {
+                try { line.close(); } catch (Exception ignored) {}
+            }
             running = false;
-            return;
+            return false;
         }
-        captureThread = new Thread(this::captureLoop, "friday-mic-capture");
-        captureThread.setDaemon(true);
-        captureThread.start();
+
+        try {
+            captureThread = new Thread(this::captureLoop, "friday-mic-capture");
+            captureThread.setDaemon(true);
+            captureThread.start();
+        } catch (Exception e) {
+            running = false;
+            if (line != null && line.isOpen()) {
+                try {
+                    line.stop();
+                    line.close();
+                } catch (Exception ignored) {}
+            }
+            return false;
+        }
+        return true;
     }
 
     /** Stop capturing. Idempotent. */
-    public void stop() {
+    @Override
+    public synchronized void stop() {
         running = false;
-        if (line != null && line.isOpen()) {
-            line.stop();
-            line.close();
+        try {
+            if (line != null && line.isOpen()) {
+                line.stop();
+                line.close();
+            }
+        } catch (Exception e) {
+            System.err.println("[MicrophoneService] Error closing audio line: " + e.getMessage());
+        } finally {
+            if (captureThread != null && captureThread != Thread.currentThread()) {
+                try {
+                    captureThread.join(300);
+                } catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
+                }
+                captureThread = null;
+            }
+            amplitude = 0.0;
         }
-        amplitude = 0.0;
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running;
     }
 
     /**
      * Returns the most recent RMS amplitude in [0.0, 1.0].
      * Safe to read from any thread, including the JavaFX Application Thread.
      */
+    @Override
     public double getAmplitude() {
-        return amplitude;
+        double val = amplitude;
+        if (Double.isNaN(val) || Double.isInfinite(val)) {
+            return 0.0;
+        }
+        return Math.max(0.0, Math.min(1.0, val));
     }
 
     /**
@@ -92,11 +139,21 @@ public final class MicrophoneService {
 
     private void captureLoop() {
         byte[] buffer = new byte[BUFFER_SIZE];
-        while (running) {
-            int bytesRead = line.read(buffer, 0, buffer.length);
-            if (bytesRead > 0) {
-                amplitude = computeRmsNormalized(buffer, bytesRead);
+        try {
+            while (running) {
+                if (line == null || !line.isOpen()) {
+                    break;
+                }
+                int bytesRead = line.read(buffer, 0, buffer.length);
+                if (bytesRead > 0) {
+                    amplitude = computeRmsNormalized(buffer, bytesRead);
+                }
             }
+        } catch (Exception e) {
+            // Audio capture loop error (e.g. line closed unexpectedly)
+        } finally {
+            running = false;
+            amplitude = 0.0;
         }
     }
 
@@ -104,19 +161,25 @@ public final class MicrophoneService {
      * Computes the RMS (root mean square) of 16-bit little-endian PCM samples
      * and normalizes to [0.0, 1.0].
      */
-    private static double computeRmsNormalized(byte[] pcm, int length) {
+    public static double computeRmsNormalized(byte[] pcm, int length) {
+        if (pcm == null || length <= 0) return 0.0;
+        int clampedLength = Math.min(pcm.length, length);
+        int sampleCount = clampedLength / 2; // 16-bit samples
+        if (sampleCount == 0) return 0.0;
+
         long sumOfSquares = 0;
-        int sampleCount = length / 2; // 16-bit samples
-        for (int i = 0; i + 1 < length; i += 2) {
+        for (int i = 0; i + 1 < clampedLength; i += 2) {
             // Combine two bytes into a signed 16-bit sample (little-endian)
             short sample = (short) ((pcm[i + 1] << 8) | (pcm[i] & 0xFF));
             sumOfSquares += (long) sample * sample;
         }
-        if (sampleCount == 0) return 0.0;
         double rms = Math.sqrt((double) sumOfSquares / sampleCount);
         // Normalize against maximum possible 16-bit amplitude (32768)
         double normalized = rms / 32768.0;
-        return Math.min(1.0, normalized);
+        if (Double.isNaN(normalized) || Double.isInfinite(normalized)) {
+            return 0.0;
+        }
+        return Math.max(0.0, Math.min(1.0, normalized));
     }
 }
 

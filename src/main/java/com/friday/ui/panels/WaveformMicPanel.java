@@ -85,6 +85,16 @@ public final class WaveformMicPanel extends VBox {
 
     private boolean isListeningLocally = false; // used only in standalone mode
 
+    private void setMicMutedClass(boolean muted) {
+        if (muted) {
+            if (!micBtn.getStyleClass().contains("hud-mic-muted")) {
+                micBtn.getStyleClass().add("hud-mic-muted");
+            }
+        } else {
+            micBtn.getStyleClass().remove("hud-mic-muted");
+        }
+    }
+
     private void handleMicToggle() {
         if (controller != null) {
             // Toggle LISTENING ↔ IDLE via the controller
@@ -99,10 +109,10 @@ public final class WaveformMicPanel extends VBox {
             isListeningLocally = !isListeningLocally;
             if (isListeningLocally) {
                 statusLabel.setText("Listening...");
-                micBtn.getStyleClass().remove("hud-mic-muted");
+                setMicMutedClass(false);
             } else {
                 statusLabel.setText("Standby (Muted)");
-                micBtn.getStyleClass().add("hud-mic-muted");
+                setMicMutedClass(true);
             }
         }
     }
@@ -112,23 +122,27 @@ public final class WaveformMicPanel extends VBox {
         switch (state) {
             case LISTENING -> {
                 statusLabel.setText(controller.isMicAvailable() ? "Listening..." : "Listening... [no mic]");
-                micBtn.getStyleClass().remove("hud-mic-muted");
+                setMicMutedClass(false);
             }
             case SPEAKING  -> {
                 statusLabel.setText("Speaking...");
-                micBtn.getStyleClass().add("hud-mic-muted");
+                setMicMutedClass(true);
             }
             case THINKING  -> {
                 statusLabel.setText("Processing...");
-                micBtn.getStyleClass().add("hud-mic-muted");
+                setMicMutedClass(true);
             }
-            case ALERT     -> {
-                statusLabel.setText("⚠ Alert");
-                micBtn.getStyleClass().add("hud-mic-muted");
+            case EXECUTING -> {
+                statusLabel.setText("Executing...");
+                setMicMutedClass(true);
+            }
+            case ERROR     -> {
+                statusLabel.setText("⚠ Error");
+                setMicMutedClass(true);
             }
             default        -> {
                 statusLabel.setText("Standby");
-                micBtn.getStyleClass().remove("hud-mic-muted");
+                setMicMutedClass(false);
             }
         }
     }

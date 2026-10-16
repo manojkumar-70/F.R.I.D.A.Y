@@ -26,12 +26,13 @@ public final class StateControlBar extends StackPane {
     private final Button[] buttons = new Button[AssistantState.values().length];
 
     private static final String[][] STATE_META = {
-        // { label,   tooltip }
-        { "⬡  IDLE",      "Idle — slow rotating rings"               },
-        { "🎤  LISTEN",   "Listening — mic waveform (real audio)"    },
-        { "◈  THINK",    "Thinking — scanning arcs"                  },
-        { "▶  SPEAK",    "Speaking — speech-synced waveform"         },
-        { "⚠  ALERT",    "Alert — red warning indicators"            },
+        // { label,        tooltip }
+        { "⬡  IDLE",      "Idle — slow rotating rings (standby)"                  },
+        { "🎤  LISTEN",   "Listening — mic waveform (real audio capture)"         },
+        { "◈  THINK",    "Thinking — analytical scanning arcs"                   },
+        { "▶  SPEAK",    "Speaking — speech playback waveform"                   },
+        { "⚙  EXEC",     "Executing — task progress & orbital data ticks"        },
+        { "⚠  ERROR",    "Error — crimson warning perimeter & fault indicators"  },
     };
 
     public StateControlBar(AssistantStateController controller) {
@@ -59,7 +60,24 @@ public final class StateControlBar extends StackPane {
             btn.getStyleClass().addAll("state-btn");
             Tooltip.install(btn, new Tooltip(STATE_META[i][1]));
             btn.setFocusTraversable(false);
-            btn.setOnAction(e -> controller.setState(state));
+            btn.setOnAction(e -> {
+                boolean success = controller.transitionTo(state);
+                if (!success && controller.getState() != state) {
+                    Object prevAnim = btn.getProperties().get("rejectTransition");
+                    if (prevAnim instanceof javafx.animation.PauseTransition pt) {
+                        pt.stop();
+                    }
+                    btn.setStyle("-fx-border-color: #e63946;");
+                    javafx.animation.PauseTransition pause =
+                            new javafx.animation.PauseTransition(javafx.util.Duration.millis(350));
+                    pause.setOnFinished(ev -> {
+                        btn.setStyle("");
+                        btn.getProperties().remove("rejectTransition");
+                    });
+                    btn.getProperties().put("rejectTransition", pause);
+                    pause.play();
+                }
+            });
             buttons[i] = btn;
             row.getChildren().add(btn);
         }

@@ -5,15 +5,17 @@ package com.friday.assistant;
  * Each state drives a distinct holographic animation and audio behavior.
  */
 public enum AssistantState {
-    /** Default: slow rotating rings, gentle glow, drifting particles. */
+    /** Default: slow rotating rings, gentle breathing glow, drifting particles. */
     IDLE,
-    /** Actively capturing microphone input; waveform reacts to real amplitude. */
+    /** Actively capturing microphone input; waveform reacts to real audio amplitude. */
     LISTENING,
-    /** Processing a query; faster scanning arcs and data-ring sweep. */
+    /** Processing query/intent; analytical scanning arcs and sweep reticle. */
     THINKING,
-    /** Playing back synthesized speech; waveform pulses with real audio amplitude. */
+    /** Playing back synthesized speech; waveform synchronized to speech playback. */
     SPEAKING,
-    /** Warning condition; red/amber ring accents and alert indicators. */
-    ALERT
+    /** Performing desktop action; orbital telemetry ticks and progress arcs. */
+    EXECUTING,
+    /** Error or alert condition; crimson perimeter pulse and diagnostic fault indicators. */
+    ERROR
 }
 
