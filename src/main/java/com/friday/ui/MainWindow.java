@@ -37,6 +37,7 @@ public final class MainWindow extends BorderPane {
 
     /** Hold a reference so we can call shutdown(). */
     private final HologramAssistantView hologramView;
+    private final SystemStatusPanel systemStatusPanel;
 
     public MainWindow(Stage stage) {
         getStyleClass().add("window-root");
@@ -61,6 +62,7 @@ public final class MainWindow extends BorderPane {
         setCenter(centerStack);
 
         // ── 4. Bottom Section: System Status + Dock + Waveform Mic ───────────
+        systemStatusPanel = new SystemStatusPanel();
         HBox bottomBar = createBottomBar();
         setBottom(bottomBar);
 
@@ -68,10 +70,13 @@ public final class MainWindow extends BorderPane {
         stage.setOnCloseRequest(e -> shutdown());
     }
 
-    /** Called on window close. Stops animations and releases audio resources. */
+    /** Called on window close. Stops animations, background polling, and releases audio resources. */
     public void shutdown() {
         hologramView.shutdown();
         stateController.shutdown();
+        if (systemStatusPanel != null) {
+            systemStatusPanel.shutdown();
+        }
     }
 
     // ── Private layout builders ───────────────────────────────────────────────
@@ -126,8 +131,7 @@ public final class MainWindow extends BorderPane {
         bottomBox.setPadding(new Insets(4, 16, 12, 16));
         bottomBox.setMinSize(0, 0);
 
-        // Bottom Left: System Status Gauges
-        SystemStatusPanel systemStatusPanel = new SystemStatusPanel();
+        // Bottom Left: System Status Gauges (uses field initialized in constructor)
 
         Region spacerLeft = new Region();
         HBox.setHgrow(spacerLeft, Priority.ALWAYS);
